@@ -1,1 +1,30 @@
-/* You can add global styles to this file, and also import other style files */
+/* Global styles for Rota Viewer */
+
+/* Reset margins and set full height */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Spacer class for flex spacing in toolbar */
+.spacer {
+  flex: 1 1 auto;
+}
+
+/* Container with padding and max width */
+.container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Active route styling */
+.active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
