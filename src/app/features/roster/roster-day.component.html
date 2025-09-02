@@ -1,0 +1,114 @@
+<div class="roster-day-container">
+  <!-- Header -->
+  <mat-toolbar color="primary">
+    <h1>Daily Roster</h1>
+  </mat-toolbar>
+
+  <!-- Controls Row -->
+  <div class="controls">
+    <!-- Team Selector -->
+    <mat-form-field appearance="outline">
+      <mat-label>Team</mat-label>
+      <mat-select [formControl]="selectedTeamId" aria-label="Select team">
+        <mat-option *ngFor="let team of teams$ | async" [value]="team.id">
+          {{ team.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Date Controls -->
+    <div class="date-controls">
+      <button mat-icon-button (click)="prev()" aria-label="Previous day">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <mat-form-field appearance="outline" class="date-picker">
+        <mat-label>Date</mat-label>
+        <input matInput [matDatepicker]="picker" [formControl]="selectedDate" readonly>
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      
+      <button mat-stroked-button (click)="today()" aria-label="Go to today">
+        Today
+      </button>
+      
+      <button mat-icon-button (click)="next()" aria-label="Next day">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+
+    <!-- Timezone Selector -->
+    <mat-form-field appearance="outline">
+      <mat-label>Timezone</mat-label>
+      <mat-select [value]="currentTimezone$ | async" 
+                  (selectionChange)="onTimezoneChange($event.value)"
+                  aria-label="Select timezone">
+        <mat-option *ngFor="let tz of timezones" [value]="tz">
+          {{ tz }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Shifts Content -->
+  <div class="shifts-container">
+    <ng-container *ngIf="shifts$ | async as shifts">
+      
+      <!-- Empty State -->
+      <mat-card *ngIf="shifts.length === 0" class="empty-state">
+        <mat-card-content>
+          <div class="empty-content">
+            <mat-icon>event_busy</mat-icon>
+            <h3>No shifts assigned for this day</h3>
+            <p>There are no scheduled shifts for the selected team and date.</p>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Shifts List -->
+      <mat-card *ngFor="let shift of shifts" class="shift-card">
+        <mat-card-content>
+          <div class="shift-content">
+            <!-- Left side: Task and Member info -->
+            <div class="shift-info">
+              <div class="task-name">{{ shift.task }}</div>
+              <div class="member-info">
+                <span class="member-name" 
+                      [class.unassigned]="shift.isUnassigned">
+                  {{ shift.isUnassigned ? 'Unassigned' : shift.member?.name }}
+                </span>
+                <span *ngIf="!shift.isUnassigned" class="member-role">
+                  ({{ shift.member?.role }})
+                </span>
+              </div>
+            </div>
+
+            <!-- Right side: Time and warnings -->
+            <div class="shift-times">
+              <div class="time-range">
+                {{ shift.startTime }} - {{ shift.endTime }}
+              </div>
+              <div class="source-timezone">
+                Source TZ: {{ shift.sourceTimezone }}
+              </div>
+              
+              <!-- Warning indicators -->
+              <div class="warnings" *ngIf="shift.isUnassigned || shift.hasOverlap">
+                <div *ngIf="shift.isUnassigned" class="warning unassigned-warning">
+                  <mat-icon>person_off</mat-icon>
+                  <span>Unassigned</span>
+                </div>
+                <div *ngIf="shift.hasOverlap" class="warning overlap-warning">
+                  <mat-icon>warning</mat-icon>
+                  <span>Schedule overlap</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </ng-container>
+  </div>
+</div>

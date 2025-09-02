@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -10,18 +10,27 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { Observable, combineLatest, map, startWith } from 'rxjs';
+import { Observable, combineLatest, map, startWith, switchMap } from 'rxjs';
+
 import { DataService } from '../../core/services/data.service';
 import { TzService } from '../../core/services/tz.service';
-import { Member, Team } from '../../models';
+import { Team, Shift, Member } from '../../models';
 
-type ShiftWithMember = import('../../models').Shift & { member?: Member } & { overlap?: boolean };
+interface ShiftWithMember extends Shift {
+  member?: Member;
+  hasOverlap?: boolean;
+  isUnassigned?: boolean;
+  startTime?: string;
+  endTime?: string;
+  sourceTimezone?: string;
+}
 
 @Component({
   selector: 'app-roster-day',
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     MatToolbarModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -30,149 +39,172 @@ type ShiftWithMember = import('../../models').Shift & { member?: Member } & { ov
     MatIconModule,
     MatCardModule,
     MatDatepickerModule,
-    MatNativeDateModule,
-    ReactiveFormsModule,
+    MatNativeDateModule
   ],
   templateUrl: './roster-day.component.html',
   styleUrls: ['./roster-day.component.scss']
 })
-export class RosterDayComponent {
-  private data = inject(DataService);
-  tz = inject(TzService);
+export class RosterDayComponent implements OnInit {
+  private dataService = inject(DataService);
+  private tzService = inject(TzService);
 
+  // Form controls
+  selectedTeamId = new FormControl<string>('');
+  selectedDate = new FormControl<Date>(new Date());
+
+  // Available timezones
   timezones = [
     'Africa/Johannesburg',
     'UTC',
     'Europe/London',
     'America/New_York',
-    'Asia/Dubai',
+    'Asia/Dubai'
   ];
 
-  teams$ = this.data.teams$;
+  // Observables
+  teams$ = this.dataService.teams$;
+  selectedTeam$: Observable<Team | undefined>;
+  shifts$: Observable<ShiftWithMember[]>;
+  currentTimezone$ = this.tzService.timezone$;
 
-  selectedTeamId = new FormControl<string | null>(null, { nonNullable: false });
-  selectedDate = new FormControl<Date | null>(null);
+  constructor() {
+    // Initialize selected team observable
+    this.selectedTeam$ = combineLatest([
+      this.teams$,
+      this.selectedTeamId.valueChanges.pipe(startWith(''))
+    ]).pipe(
+      map(([teams, teamId]) => teams.find(team => team.id === teamId))
+    );
 
-  selectedTeam$: Observable<Team | undefined> = combineLatest([
-    this.teams$,
-    this.selectedTeamId.valueChanges.pipe(startWith(null))
-  ]).pipe(
-    map(([teams, id]) => {
-      const selected = id || (teams.length ? teams[0].id : null);
-      return teams.find(t => t.id === selected);
-    })
-  );
+    // Initialize shifts observable - simplified approach
+    this.shifts$ = new Observable<ShiftWithMember[]>(subscriber => subscriber.next([]));
+  }
 
-  shifts$: Observable<ShiftWithMember[]> = combineLatest([
-    this.selectedTeam$,
-    this.selectedDate.valueChanges.pipe(startWith(null))
-  ]).pipe(
-    map(([team, date]) => {
-      const d = date ?? new Date();
-      const iso = this.toIsoDate(d);
-      if (!team) return { teamId: null as unknown as string, iso } as unknown as ShiftWithMember[];
-      return { team, iso } as unknown as ShiftWithMember[];
-    }),
-    // The above map is only to pass values forward; we'll switch to actual data stream below using another map
-  );
+  ngOnInit(): void {
+    // Set default team to first available team
+    this.teams$.subscribe(teams => {
+      if (teams.length > 0 && !this.selectedTeamId.value) {
+        this.selectedTeamId.setValue(teams[0].id);
+      }
+    });
 
-  // Actual shifts stream with member join and overlap detection
-  shiftsWithFlags$: Observable<ShiftWithMember[]> = combineLatest([
-    this.selectedTeam$,
-    this.selectedDate.valueChanges.pipe(startWith(new Date()))
-  ]).pipe(
-    map(([team, date]) => {
-      if (!team) return { teamId: null as unknown as string, iso: '' } as unknown as ShiftWithMember[];
-      const iso = this.toIsoDate(date ?? new Date());
-      return { team, iso };
-    }),
-    // fetch from service
-    // Using a flattening map pattern without importing switchMap to keep deps minimal
-    // We'll compose by returning an inner observable and flattening via combineLatest again
-    // but simpler is to just reconstruct here with combineLatest
-    // However to keep it straightforward, re-compute using data service here
-    // eslint-disable-next-line rxjs/no-nested-subscribe
-    map((ctx: any) => ctx),
-  );
+    // Set default date to today
+    const today = new Date();
+    this.selectedDate.setValue(today);
 
-  // Expose a derived observable directly for template consumption using a helper method
-  getShifts(team: Team | undefined, date: Date | null): Observable<ShiftWithMember[]> {
-    if (!team) return new Observable<ShiftWithMember[]>(subscriber => { subscriber.next([]); subscriber.complete(); });
-    const iso = this.toIsoDate(date ?? new Date());
-    return this.data.shiftsWithMembers$(team.id, iso).pipe(
-      map(shifts => this.withOverlapFlags(shifts))
+    // Setup shifts observable with proper flattening
+    this.shifts$ = combineLatest([
+      this.selectedTeamId.valueChanges.pipe(startWith('')),
+      this.selectedDate.valueChanges.pipe(startWith(new Date())),
+      this.selectedTeam$
+    ]).pipe(
+      switchMap(([teamId, date, team]) => {
+        if (!teamId || !date) {
+          return new Observable<ShiftWithMember[]>(subscriber => subscriber.next([]));
+        }
+        
+        const isoDate = this.toIsoDate(date);
+        return this.dataService.shiftsWithMembers$(teamId, isoDate).pipe(
+          map(shifts => this.processShifts(shifts, team))
+        );
+      })
     );
   }
 
-  constructor() {
-    // initialize defaults once teams load
-    this.teams$.subscribe(teams => {
-      if (!this.selectedTeamId.value && teams.length) {
-        this.selectedTeamId.setValue(teams[0].id);
+  private processShifts(shifts: (Shift & { member?: Member })[], team?: Team): ShiftWithMember[] {
+    const processedShifts: ShiftWithMember[] = shifts.map(shift => {
+      const isUnassigned = !shift.member;
+      
+      // Convert times to viewer timezone
+      let startTime = shift.start;
+      let endTime = shift.end;
+      let sourceTimezone = team?.timezone || 'UTC';
+      
+      try {
+        const startDateTime = this.tzService.toViewer(shift.date, shift.start, sourceTimezone);
+        const endDateTime = this.tzService.toViewer(shift.date, shift.end, sourceTimezone);
+        startTime = this.tzService.formatTime(startDateTime);
+        endTime = this.tzService.formatTime(endDateTime);
+      } catch (error) {
+        console.warn('Time conversion failed:', error);
       }
-      if (!this.selectedDate.value) {
-        this.selectedDate.setValue(new Date());
-      }
+
+      return {
+        ...shift,
+        isUnassigned,
+        startTime,
+        endTime,
+        sourceTimezone,
+        hasOverlap: false // Will be set below
+      };
     });
+
+    // Check for overlaps
+    this.detectOverlaps(processedShifts);
+
+    return processedShifts;
   }
 
+  private detectOverlaps(shifts: ShiftWithMember[]): void {
+    for (let i = 0; i < shifts.length; i++) {
+      for (let j = i + 1; j < shifts.length; j++) {
+        const shift1 = shifts[i];
+        const shift2 = shifts[j];
+        
+        // Check if same member and overlapping times
+        if (shift1.memberId === shift2.memberId && 
+            shift1.member && shift2.member) {
+          
+          const start1 = this.timeToMinutes(shift1.start);
+          const end1 = this.timeToMinutes(shift1.end);
+          const start2 = this.timeToMinutes(shift2.start);
+          const end2 = this.timeToMinutes(shift2.end);
+          
+          // Check for overlap: [start1, end1) intersects [start2, end2)
+          if (start1 < end2 && start2 < end1) {
+            shift1.hasOverlap = true;
+            shift2.hasOverlap = true;
+          }
+        }
+      }
+    }
+  }
+
+  private timeToMinutes(timeStr: string): number {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+
+  // Utility method to convert Date to ISO date string
   toIsoDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return date.toISOString().split('T')[0];
   }
 
+  // Navigation helpers
   prev(): void {
-    const d = this.selectedDate.value ?? new Date();
-    const nd = new Date(d);
-    nd.setDate(nd.getDate() - 1);
-    this.selectedDate.setValue(nd);
+    const currentDate = this.selectedDate.value;
+    if (currentDate) {
+      const prevDate = new Date(currentDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      this.selectedDate.setValue(prevDate);
+    }
   }
 
   next(): void {
-    const d = this.selectedDate.value ?? new Date();
-    const nd = new Date(d);
-    nd.setDate(nd.getDate() + 1);
-    this.selectedDate.setValue(nd);
+    const currentDate = this.selectedDate.value;
+    if (currentDate) {
+      const nextDate = new Date(currentDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+      this.selectedDate.setValue(nextDate);
+    }
   }
 
   today(): void {
     this.selectedDate.setValue(new Date());
   }
 
-  onTimezoneChange(zone: string): void {
-    this.tz.setTimezone(zone);
-  }
-
-  withOverlapFlags(shifts: ShiftWithMember[]): ShiftWithMember[] {
-    const byMember: Record<string, ShiftWithMember[]> = {};
-    for (const s of shifts) {
-      const key = s.memberId || '_none_';
-      if (!byMember[key]) byMember[key] = [];
-      byMember[key].push(s);
-    }
-    const result: ShiftWithMember[] = shifts.map(s => ({ ...s, overlap: false }));
-    const idToIndex: Map<string, number> = new Map();
-    result.forEach((s, i) => idToIndex.set(s.id, i));
-    const hasOverlap = (aStart: string, aEnd: string, bStart: string, bEnd: string) => {
-      return aStart < bEnd && bStart < aEnd; // [start, end)
-    };
-    for (const memberId of Object.keys(byMember)) {
-      const list = byMember[memberId].slice().sort((a, b) => a.start.localeCompare(b.start));
-      for (let i = 0; i < list.length; i++) {
-        for (let j = i + 1; j < list.length; j++) {
-          if (hasOverlap(list[i].start, list[i].end, list[j].start, list[j].end)) {
-            const ii = idToIndex.get(list[i].id);
-            const jj = idToIndex.get(list[j].id);
-            if (ii != null) result[ii].overlap = true;
-            if (jj != null) result[jj].overlap = true;
-          }
-        }
-      }
-    }
-    return result;
+  // Timezone change handler
+  onTimezoneChange(timezone: string): void {
+    this.tzService.setTimezone(timezone);
   }
 }
-
-
