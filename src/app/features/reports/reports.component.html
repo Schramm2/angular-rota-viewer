@@ -1,0 +1,141 @@
+<div class="reports-container">
+  <!-- Header Controls -->
+  <mat-card class="controls-card">
+    <mat-card-header>
+      <mat-card-title>Reports Configuration</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="controls-row">
+        <!-- Team Selection -->
+        <mat-form-field appearance="outline">
+          <mat-label>Team</mat-label>
+          <mat-select [formControl]="selectedTeamId">
+            <mat-option *ngFor="let team of teams$ | async" [value]="team.id">
+              {{ team.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Date Range -->
+        <mat-form-field appearance="outline">
+          <mat-label>Start Date</mat-label>
+          <input matInput [matDatepicker]="startPicker" [formControl]="startDate" (dateChange)="onStartDateChange()">
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>End Date</mat-label>
+          <input matInput [matDatepicker]="endPicker" [formControl]="endDate" (dateChange)="onEndDateChange()">
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- KPI Cards -->
+  <div class="kpi-section" *ngIf="reportData$ | async as data">
+    <div class="kpi-grid">
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <div class="kpi-content">
+            <mat-icon class="kpi-icon">assignment</mat-icon>
+            <div class="kpi-details">
+              <div class="kpi-value">{{ data.totalShifts }}</div>
+              <div class="kpi-label">Total Shifts</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <div class="kpi-content">
+            <mat-icon class="kpi-icon">people</mat-icon>
+            <div class="kpi-details">
+              <div class="kpi-value">{{ data.membersScheduled }}</div>
+              <div class="kpi-label">Members Scheduled</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <div class="kpi-content">
+            <mat-icon class="kpi-icon">schedule</mat-icon>
+            <div class="kpi-details">
+              <div class="kpi-value">{{ data.coveragePercentage }}%</div>
+              <div class="kpi-label">Coverage %</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <div class="kpi-content">
+            <mat-icon class="kpi-icon">balance</mat-icon>
+            <div class="kpi-details">
+              <div class="kpi-value">{{ data.fairnessScore }}</div>
+              <div class="kpi-label">Fairness Score</div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section" *ngIf="reportData$ | async as data">
+    <div class="charts-grid">
+      <!-- Bar Chart: Shifts per Member -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Shifts per Member</mat-card-title>
+          <mat-card-subtitle>Distribution of shifts across team members</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <canvas baseChart
+                    [data]="barChartData"
+                    [options]="barChartOptions"
+                    [type]="barChartType">
+            </canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Line Chart: Daily Coverage -->
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Daily Coverage %</mat-card-title>
+          <mat-card-subtitle>Coverage percentage across the selected date range</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container">
+            <canvas baseChart
+                    [data]="lineChartData"
+                    [options]="lineChartOptions"
+                    [type]="lineChartType">
+            </canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- No Data Message -->
+  <div class="no-data" *ngIf="(reportData$ | async)?.totalShifts === 0">
+    <mat-card>
+      <mat-card-content>
+        <div class="no-data-content">
+          <mat-icon class="no-data-icon">info</mat-icon>
+          <h3>No Data Available</h3>
+          <p>No shifts found for the selected team and date range. Try selecting a different team or adjusting the date range.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

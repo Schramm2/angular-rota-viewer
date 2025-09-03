@@ -81,4 +81,33 @@ export class DataService {
       })
     );
   }
+
+  // Get shifts with member information for a date range
+  shiftsWithMembersInRange$(teamId: string, startIso: string, endIso: string): Observable<Array<Shift & { member?: Member }>> {
+    return combineLatest([
+      this.shiftsInRange$(teamId, startIso, endIso),
+      this.members$
+    ]).pipe(
+      map(([shifts, members]) => {
+        return shifts.map(shift => ({
+          ...shift,
+          member: members.find(member => member.id === shift.memberId)
+        }));
+      })
+    );
+  }
+
+  // Get team members by team ID
+  teamMembers$(teamId: string): Observable<Member[]> {
+    return combineLatest([
+      this.teamById$(teamId),
+      this.members$
+    ]).pipe(
+      map(([team, members]) => {
+        if (!team) return [];
+        const memberIds = team.members.map(ref => ref.id);
+        return members.filter(member => memberIds.includes(member.id));
+      })
+    );
+  }
 }
