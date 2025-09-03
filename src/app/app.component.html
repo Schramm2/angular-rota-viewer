@@ -1,57 +1,79 @@
 <!-- Skip to content link for accessibility -->
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<mat-toolbar color="primary" role="banner">
-  <span>{{ title }}</span>
-  <span class="spacer"></span>
-  
-  <!-- Role Switcher -->
-  <div class="role-controls" *ngIf="currentRole$ | async as currentRole">
-    <mat-form-field appearance="outline" class="role-selector">
-      <mat-label>Role</mat-label>
-      <mat-select [value]="currentRole" 
-                  (selectionChange)="onRoleChange($event.value)"
-                  aria-label="Select your role">
-        <mat-option *ngFor="let role of availableRoles" [value]="role">
-          {{ getRoleDisplayName(role) }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+<!-- Modern App Header -->
+<header class="app-header" role="banner">
+  <div class="header-container">
+    <!-- Brand Section -->
+    <div class="brand-section">
+      <div class="brand-icon">
+        <span class="brand-icon-text">RV</span>
+      </div>
+      <h1 class="brand-title">{{ title }}</h1>
+    </div>
 
-    <!-- Member Selector (only for member role) -->
-    <mat-form-field *ngIf="currentRole === 'member'" appearance="outline" class="member-selector">
-      <mat-label>Member</mat-label>
-      <mat-select [value]="(currentMemberId$ | async)" 
-                  (selectionChange)="onMemberChange($event.value)"
-                  aria-label="Select member">
-        <mat-option *ngFor="let member of (members$ | async)" [value]="member.id">
-          {{ member.name }} ({{ member.role }})
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    <!-- Navigation -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+      <a class="nav-link" 
+         routerLink="/" 
+         routerLinkActive="nav-link-active"
+         [routerLinkActiveOptions]="{exact: true}"
+         matTooltip="View daily roster"
+         aria-label="Navigate to roster view">
+        <span class="nav-icon">RS</span>
+        <span class="nav-text">Roster</span>
+      </a>
+      <a class="nav-link" 
+         routerLink="/reports" 
+         routerLinkActive="nav-link-active"
+         matTooltip="View reports and analytics"
+         aria-label="Navigate to reports">
+        <span class="nav-icon">RP</span>
+        <span class="nav-text">Reports</span>
+      </a>
+    </nav>
+
+    <!-- User Controls -->
+    <div class="user-controls">
+      <!-- Role Switcher -->
+      <div class="role-controls" *ngIf="currentRole$ | async as currentRole">
+        <mat-form-field appearance="outline" class="role-selector">
+          <mat-label>Role</mat-label>
+          <mat-select [value]="currentRole" 
+                      (selectionChange)="onRoleChange($event.value)"
+                      aria-label="Select your role">
+            <mat-option *ngFor="let role of availableRoles" [value]="role">
+              {{ getRoleDisplayName(role) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Member Selector (only for member role) -->
+        <mat-form-field *ngIf="currentRole === 'member'" appearance="outline" class="member-selector">
+          <mat-label>Member</mat-label>
+          <mat-select [value]="(currentMemberId$ | async)" 
+                      (selectionChange)="onMemberChange($event.value)"
+                      aria-label="Select member">
+            <mat-option *ngFor="let member of (members$ | async)" [value]="member.id">
+              {{ member.name }} ({{ member.role }})
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button class="theme-toggle"
+              mat-icon-button 
+              (click)="toggleTheme()" 
+              [matTooltip]="getThemeTooltip((currentTheme$ | async) || 'light')"
+              aria-label="Toggle theme">
+        <span class="theme-icon-text">{{ ((currentTheme$ | async) || 'light') === 'dark' ? 'LT' : 'DK' }}</span>
+      </button>
+    </div>
   </div>
+</header>
 
-  <!-- Theme Toggle -->
-  <button mat-icon-button 
-          (click)="toggleTheme()" 
-          [matTooltip]="getThemeTooltip((currentTheme$ | async) || 'light')"
-          aria-label="Toggle theme">
-    <mat-icon>{{ getThemeIcon((currentTheme$ | async) || 'light') }}</mat-icon>
-  </button>
-
-  <!-- Navigation -->
-  <button mat-button routerLink="/" routerLinkActive="active" 
-          matTooltip="View daily roster">
-    <mat-icon>calendar_today</mat-icon>
-    Roster
-  </button>
-  <button mat-button routerLink="/reports" routerLinkActive="active"
-          matTooltip="View reports and analytics">
-    <mat-icon>analytics</mat-icon>
-    Reports
-  </button>
-</mat-toolbar>
-
-<main id="main-content" class="container" role="main">
+<!-- Main Content Area -->
+<main id="main-content" class="main-container" role="main">
   <router-outlet></router-outlet>
 </main>

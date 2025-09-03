@@ -373,4 +373,29 @@ export class RosterDayComponent implements OnInit {
       });
     }
   }
+
+  formatHeaderDate(date: Date): string {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const dateStr = this.toIsoDate(date);
+    
+    if (dateStr === this.toIsoDate(today)) {
+      return 'Today';
+    } else if (dateStr === this.toIsoDate(tomorrow)) {
+      return 'Tomorrow';
+    } else if (dateStr === this.toIsoDate(yesterday)) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+  }
 }

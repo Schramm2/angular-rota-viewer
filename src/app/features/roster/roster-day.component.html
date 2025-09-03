@@ -1,177 +1,259 @@
 <div class="roster-day-container">
-  <!-- Header -->
-  <mat-toolbar color="primary">
-    <h1>Daily Roster</h1>
-  </mat-toolbar>
-
-  <!-- Controls Row -->
-  <div class="controls">
-    <!-- Team Selector (hidden for member role) -->
-    <mat-form-field *ngIf="!isMemberRole()" appearance="outline">
-      <mat-label>Team</mat-label>
-      <mat-select [formControl]="selectedTeamId" aria-label="Select team">
-        <mat-option *ngFor="let team of teams$ | async" [value]="team.id">
-          {{ team.name }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <!-- Date Controls -->
-    <div class="date-controls">
-      <button mat-icon-button (click)="prev()" aria-label="Previous day">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      
-      <mat-form-field appearance="outline" class="date-picker">
-        <mat-label>Date</mat-label>
-        <input matInput [matDatepicker]="picker" [formControl]="selectedDate" readonly>
-        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
-      </mat-form-field>
-      
-      <button mat-stroked-button (click)="today()" aria-label="Go to today">
-        Today
-      </button>
-      
-      <button mat-icon-button (click)="next()" aria-label="Next day">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>Daily Roster</h1>
+      </div>
+      <div class="header-subtitle" *ngIf="selectedDate.value">
+        {{ formatHeaderDate(selectedDate.value) }}
+      </div>
     </div>
+  </div>
 
-    <!-- Timezone Selector -->
-    <mat-form-field appearance="outline">
-      <mat-label>Timezone</mat-label>
-      <mat-select [value]="currentTimezone$ | async" 
-                  (selectionChange)="onTimezoneChange($event.value)"
-                  aria-label="Select timezone">
-        <mat-option *ngFor="let tz of timezones" [value]="tz">
-          {{ tz }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+  <!-- Modern Controls Panel -->
+  <div class="controls-panel">
+    <div class="controls-container">
+      <!-- Left Controls -->
+      <div class="controls-left">
+        <!-- Team Selector (hidden for member role) -->
+        <mat-form-field *ngIf="!isMemberRole()" appearance="outline" class="control-field">
+          <mat-label>Team</mat-label>
+          <mat-select [formControl]="selectedTeamId" aria-label="Select team">
+            <mat-option *ngFor="let team of teams$ | async" [value]="team.id">
+              {{ team.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Timezone Selector -->
+        <mat-form-field appearance="outline" class="control-field">
+          <mat-label>Timezone</mat-label>
+          <mat-select [value]="currentTimezone$ | async" 
+                      (selectionChange)="onTimezoneChange($event.value)"
+                      aria-label="Select timezone">
+            <mat-option *ngFor="let tz of timezones" [value]="tz">
+              {{ tz }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- Center Date Controls -->
+      <div class="date-controls">
+        <button mat-icon-button 
+                class="date-nav-btn" 
+                (click)="prev()" 
+                aria-label="Previous day"
+                matTooltip="Previous day">
+          <span class="nav-arrow">‹</span>
+        </button>
+        
+        <mat-form-field appearance="outline" class="date-picker">
+          <mat-label>Date</mat-label>
+          <input matInput [matDatepicker]="picker" [formControl]="selectedDate" readonly>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+        
+        <button mat-stroked-button 
+                class="today-btn" 
+                (click)="today()" 
+                aria-label="Go to today"
+                matTooltip="Go to today">
+          Today
+        </button>
+        
+        <button mat-icon-button 
+                class="date-nav-btn" 
+                (click)="next()" 
+                aria-label="Next day"
+                matTooltip="Next day">
+          <span class="nav-arrow">›</span>
+        </button>
+      </div>
+
+      <!-- Right Controls (for future expansion) -->
+      <div class="controls-right">
+        <!-- Placeholder for additional controls -->
+      </div>
+    </div>
   </div>
 
   <!-- Member Next Shift Card (only for member role) -->
   <div *ngIf="isMemberRole() && (nextShift$ | async) as nextShift" class="next-shift-section">
-    <mat-card class="next-shift-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>schedule</mat-icon>
-          Your Next Shift
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="next-shift-content">
-          <div class="shift-details">
-            <div class="shift-task">{{ nextShift.task }}</div>
-            <div class="shift-time">
-              {{ formatNextShiftDate(nextShift) }} • {{ nextShift.startTime }} - {{ nextShift.endTime }}
+    <div class="section-container">
+      <mat-card class="next-shift-card">
+        <mat-card-content>
+          <div class="next-shift-content">
+            <div class="shift-icon">
+              <span class="shift-icon-text">SC</span>
+            </div>
+            <div class="shift-info">
+              <div class="shift-label">Your Next Shift</div>
+              <div class="shift-task">{{ nextShift.task }}</div>
+              <div class="shift-time">
+                {{ formatNextShiftDate(nextShift) }} • {{ nextShift.startTime }} - {{ nextShift.endTime }}
+              </div>
+            </div>
+            <div class="shift-badge">
+              <mat-chip class="date-chip">{{ formatNextShiftDate(nextShift) }}</mat-chip>
             </div>
           </div>
-          <mat-chip-set>
-            <mat-chip>{{ formatNextShiftDate(nextShift) }}</mat-chip>
-          </mat-chip-set>
-        </div>
-      </mat-card-content>
-    </mat-card>
+        </mat-card-content>
+      </mat-card>
+    </div>
   </div>
 
   <!-- Admin Summary Panel (only for admin role) -->
   <div *ngIf="isAdminRole() && (adminSummary$ | async) as summary" class="admin-summary-section">
-    <mat-card class="admin-summary-card">
-      <mat-card-header>
-        <mat-card-title>
-          <mat-icon>dashboard</mat-icon>
-          System Summary
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="summary-grid">
-          <div class="summary-item">
-            <div class="summary-value">{{ summary.totalTeams }}</div>
-            <div class="summary-label">Teams</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-value">{{ summary.totalMembers }}</div>
-            <div class="summary-label">Active Members</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-value">{{ summary.totalShifts }}</div>
-            <div class="summary-label">Today's Shifts</div>
-          </div>
-          <div class="summary-item" *ngIf="summary.unassignedShifts > 0">
-            <div class="summary-value warning">{{ summary.unassignedShifts }}</div>
-            <div class="summary-label">Unassigned</div>
-          </div>
-          <div class="summary-item" *ngIf="summary.overlapShifts > 0">
-            <div class="summary-value error">{{ summary.overlapShifts }}</div>
-            <div class="summary-label">Overlaps</div>
+    <div class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">System Overview</h2>
+      </div>
+      
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-content">
+            <div class="summary-icon">
+              <span class="summary-icon-text">GP</span>
+            </div>
+            <div class="summary-details">
+              <div class="summary-value">{{ summary.totalTeams }}</div>
+              <div class="summary-label">Teams</div>
+            </div>
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+        
+        <div class="summary-card">
+          <div class="summary-content">
+            <div class="summary-icon">
+              <span class="summary-icon-text">PP</span>
+            </div>
+            <div class="summary-details">
+              <div class="summary-value">{{ summary.totalMembers }}</div>
+              <div class="summary-label">Active Members</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card">
+          <div class="summary-content">
+            <div class="summary-icon">
+              <span class="summary-icon-text">AS</span>
+            </div>
+            <div class="summary-details">
+              <div class="summary-value">{{ summary.totalShifts }}</div>
+              <div class="summary-label">Today's Shifts</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card warning" *ngIf="summary.unassignedShifts > 0">
+          <div class="summary-content">
+            <div class="summary-icon">
+              <span class="summary-icon-text">UN</span>
+            </div>
+            <div class="summary-details">
+              <div class="summary-value">{{ summary.unassignedShifts }}</div>
+              <div class="summary-label">Unassigned</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card error" *ngIf="summary.overlapShifts > 0">
+          <div class="summary-content">
+            <div class="summary-icon">
+              <span class="summary-icon-text">WR</span>
+            </div>
+            <div class="summary-details">
+              <div class="summary-value">{{ summary.overlapShifts }}</div>
+              <div class="summary-label">Overlaps</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Shifts Content -->
-  <div class="shifts-container">
-    <ng-container *ngIf="filteredShifts$ | async as shifts">
-      
-      <!-- Empty State -->
-      <mat-card *ngIf="shifts.length === 0" class="empty-state">
-        <mat-card-content>
+  <div class="shifts-section">
+    <div class="section-container">
+      <ng-container *ngIf="filteredShifts$ | async as shifts">
+        
+        <!-- Section Header -->
+        <div class="section-header" *ngIf="shifts.length > 0">
+          <h2 class="section-title">
+            <span *ngIf="!isMemberRole()">Today's Schedule</span>
+            <span *ngIf="isMemberRole()">Your Shifts</span>
+          </h2>
+          <div class="section-meta">{{ shifts.length }} {{ shifts.length === 1 ? 'shift' : 'shifts' }}</div>
+        </div>
+        
+        <!-- Empty State -->
+        <div *ngIf="shifts.length === 0" class="empty-state">
           <div class="empty-content">
-            <mat-icon>event_busy</mat-icon>
-            <h3 *ngIf="!isMemberRole()">No shifts assigned for this day</h3>
-            <h3 *ngIf="isMemberRole()">No shifts for you today</h3>
-            <p *ngIf="!isMemberRole()">There are no scheduled shifts for the selected team and date.</p>
-            <p *ngIf="isMemberRole()">You don't have any shifts scheduled for this date. Check your upcoming shifts above.</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Shifts List -->
-      <mat-card *ngFor="let shift of shifts" class="shift-card">
-        <mat-card-content>
-          <div class="shift-content">
-            <!-- Left side: Task and Member info -->
-            <div class="shift-info">
-              <div class="task-name">{{ shift.task }}</div>
-              <div class="member-info">
-                <span class="member-name" 
-                      [class.unassigned]="shift.isUnassigned">
-                  {{ shift.isUnassigned ? 'Unassigned' : shift.member?.name }}
-                </span>
-                <span *ngIf="!shift.isUnassigned && !isMemberRole()" class="member-role">
-                  ({{ shift.member?.role }})
-                </span>
-              </div>
+            <div class="empty-icon">
+              <span class="empty-icon-text">EB</span>
             </div>
+            <h3 class="empty-title" *ngIf="!isMemberRole()">No shifts assigned for this day</h3>
+            <h3 class="empty-title" *ngIf="isMemberRole()">No shifts for you today</h3>
+            <p class="empty-description" *ngIf="!isMemberRole()">There are no scheduled shifts for the selected team and date.</p>
+            <p class="empty-description" *ngIf="isMemberRole()">You don't have any shifts scheduled for this date. Check your upcoming shifts above.</p>
+          </div>
+        </div>
 
-            <!-- Right side: Time and warnings -->
-            <div class="shift-times">
-              <div class="time-range">
-                {{ shift.startTime }} - {{ shift.endTime }}
-              </div>
-              <div class="source-timezone" *ngIf="!isMemberRole()">
-                Source TZ: {{ shift.sourceTimezone }}
-              </div>
-              
-              <!-- Warning indicators (only for teamLead/manager/admin) -->
-              <div class="warnings" *ngIf="canViewFullTeam() && (shift.isUnassigned || shift.hasOverlap)">
-                <div *ngIf="shift.isUnassigned" class="warning unassigned-warning">
-                  <mat-icon>person_off</mat-icon>
-                  <span>Unassigned</span>
-                </div>
-                <div *ngIf="shift.hasOverlap" class="warning overlap-warning">
-                  <mat-icon>warning</mat-icon>
-                  <span>Schedule overlap</span>
+        <!-- Modern Shifts List -->
+        <div class="shifts-list" *ngIf="shifts.length > 0">
+          <div *ngFor="let shift of shifts" class="shift-card">
+            <div class="shift-content">
+              <!-- Task and Member Section -->
+              <div class="shift-main">
+                <div class="task-info">
+                  <div class="task-name">{{ shift.task }}</div>
+                  <div class="member-info">
+                    <div class="member-name" [class.unassigned]="shift.isUnassigned">
+                      <span class="member-icon" *ngIf="!shift.isUnassigned">PR</span>
+                      <span class="member-icon unassigned" *ngIf="shift.isUnassigned">UN</span>
+                      <span>{{ shift.isUnassigned ? 'Unassigned' : shift.member?.name }}</span>
+                    </div>
+                    <div *ngIf="!shift.isUnassigned && !isMemberRole()" class="member-role">
+                      {{ shift.member?.role }}
+                    </div>
+                  </div>
                 </div>
               </div>
+
+              <!-- Time and Status Section -->
+              <div class="shift-meta">
+                <div class="time-info">
+                  <div class="time-range">
+                    <span class="time-icon">TM</span>
+                    <span>{{ shift.startTime }} - {{ shift.endTime }}</span>
+                  </div>
+                  <div class="source-timezone" *ngIf="!isMemberRole()">
+                    <span class="tz-icon">TZ</span>
+                    <span>{{ shift.sourceTimezone }}</span>
+                  </div>
+                </div>
+                
+                <!-- Status Indicators -->
+                <div class="shift-status" *ngIf="canViewFullTeam() && (shift.isUnassigned || shift.hasOverlap)">
+                  <mat-chip class="status-chip unassigned" *ngIf="shift.isUnassigned">
+                    <span class="chip-icon">UN</span>
+                    Unassigned
+                  </mat-chip>
+                  <mat-chip class="status-chip overlap" *ngIf="shift.hasOverlap">
+                    <span class="chip-icon">WR</span>
+                    Overlap
+                  </mat-chip>
+                </div>
+              </div>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </div>
 
-    </ng-container>
+      </ng-container>
+    </div>
   </div>
 </div>

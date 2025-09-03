@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
@@ -21,7 +21,8 @@ import { Role, Member } from './models';
   imports: [
     CommonModule,
     RouterOutlet, 
-    RouterLink, 
+    RouterLink,
+    RouterLinkActive,
     MatToolbarModule, 
     MatButtonModule,
     MatSelectModule,

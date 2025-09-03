@@ -446,4 +446,14 @@ export class ReportsComponent implements OnInit {
     const member = members.find(m => m.id === memberId);
     return member?.name || 'Unknown Member';
   }
+
+  // Set date range to this week
+  today(): void {
+    const today = new Date();
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 6);
+    
+    this.startDate.setValue(weekAgo);
+    this.endDate.setValue(today);
+  }
 }
