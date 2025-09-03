@@ -46,7 +46,8 @@ Chart.register(
 );
 
 import { DataService } from '../../core/services/data.service';
-import { Team, Shift, Member } from '../../models';
+import { RoleService } from '../../core/services/role.service';
+import { Team, Shift, Member, Role } from '../../models';
 
 interface ReportData {
   totalShifts: number;
@@ -79,6 +80,7 @@ interface ReportData {
 })
 export class ReportsComponent implements OnInit {
   private dataService = inject(DataService);
+  private roleService = inject(RoleService);
 
   // Form controls
   selectedTeamId = new FormControl<string>('');
@@ -88,6 +90,9 @@ export class ReportsComponent implements OnInit {
   // Observables
   teams$ = this.dataService.teams$;
   reportData$: Observable<ReportData>;
+  currentRole$ = this.roleService.currentRole$;
+  currentMemberId$ = this.roleService.currentMemberId$;
+  members$ = this.dataService.members$;
 
   // Chart configurations
   barChartType = 'bar' as const;
@@ -198,13 +203,15 @@ export class ReportsComponent implements OnInit {
     this.startDate.setValue(weekAgo);
     this.endDate.setValue(today);
 
-    // Setup report data observable
+    // Setup report data observable with role-based filtering
     this.reportData$ = combineLatest([
       this.selectedTeamId.valueChanges.pipe(startWith('')),
       this.startDate.valueChanges.pipe(startWith(weekAgo)),
-      this.endDate.valueChanges.pipe(startWith(today))
+      this.endDate.valueChanges.pipe(startWith(today)),
+      this.currentRole$,
+      this.currentMemberId$
     ]).pipe(
-      switchMap(([teamId, startDate, endDate]) => {
+      switchMap(([teamId, startDate, endDate, role, memberId]) => {
         if (!teamId || !startDate || !endDate) {
           return new Observable<ReportData>(subscriber => 
             subscriber.next({
@@ -221,7 +228,7 @@ export class ReportsComponent implements OnInit {
         const startIso = this.toIsoDate(startDate);
         const endIso = this.toIsoDate(endDate);
         
-        return this.calculateReportData(teamId, startIso, endIso);
+        return this.calculateReportData(teamId, startIso, endIso, role, memberId);
       })
     );
 
@@ -231,21 +238,24 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  private calculateReportData(teamId: string, startIso: string, endIso: string): Observable<ReportData> {
+  private calculateReportData(teamId: string, startIso: string, endIso: string, role: Role, memberId: string | null): Observable<ReportData> {
     return combineLatest([
       this.dataService.shiftsWithMembersInRange$(teamId, startIso, endIso),
       this.dataService.teamMembers$(teamId)
     ]).pipe(
       map(([shifts, teamMembers]) => {
+        // Filter shifts based on role
+        const filteredShifts = this.filterShiftsByRole(shifts, role, memberId);
+        
         // Calculate KPIs
-        const totalShifts = shifts.length;
-        const uniqueMembers = new Set(shifts.map(shift => shift.memberId));
+        const totalShifts = filteredShifts.length;
+        const uniqueMembers = new Set(filteredShifts.map(shift => shift.memberId));
         const membersScheduled = uniqueMembers.size;
         
         // Calculate coverage percentage (assuming 24/7 coverage needed)
         const dateRange = this.getDateRange(startIso, endIso);
         const totalPossibleHours = dateRange.length * 24;
-        const actualCoveredHours = shifts.reduce((total, shift) => {
+        const actualCoveredHours = filteredShifts.reduce((total, shift) => {
           const duration = this.getShiftDurationHours(shift.start, shift.end);
           return total + duration;
         }, 0);
@@ -253,11 +263,14 @@ export class ReportsComponent implements OnInit {
           Math.round((actualCoveredHours / totalPossibleHours) * 100) : 0;
 
         // Calculate fairness (standard deviation of shifts per member)
-        const shiftsPerMemberData = this.calculateShiftsPerMember(shifts, teamMembers);
+        // For member role, only show their own data
+        const relevantMembers = role === 'member' && memberId ? 
+          teamMembers.filter(m => m.id === memberId) : teamMembers;
+        const shiftsPerMemberData = this.calculateShiftsPerMember(filteredShifts, relevantMembers);
         const fairnessScore = this.calculateFairness(shiftsPerMemberData);
 
         // Calculate daily coverage
-        const dailyCoverage = this.calculateDailyCoverage(shifts, dateRange);
+        const dailyCoverage = this.calculateDailyCoverage(filteredShifts, dateRange);
 
         return {
           totalShifts,
@@ -407,5 +420,30 @@ export class ReportsComponent implements OnInit {
     if (startDate && endDate && endDate < startDate) {
       this.startDate.setValue(endDate);
     }
+  }
+
+  // Role-based filtering
+  private filterShiftsByRole(shifts: (Shift & { member?: Member })[], role: Role, memberId: string | null): (Shift & { member?: Member })[] {
+    if (role === 'member' && memberId) {
+      // Member role: show only their shifts
+      return shifts.filter(shift => shift.memberId === memberId);
+    }
+    // TeamLead, Manager, Admin: show all shifts
+    return shifts;
+  }
+
+  // Helper methods for role-based display
+  isMemberRole(): boolean {
+    return this.roleService.getCurrentRole() === 'member';
+  }
+
+  canViewFullTeam(): boolean {
+    return this.roleService.canViewFullTeam();
+  }
+
+  getMemberName(members: Member[], memberId: string | null): string {
+    if (!memberId) return 'Select Member';
+    const member = members.find(m => m.id === memberId);
+    return member?.name || 'Unknown Member';
   }
 }

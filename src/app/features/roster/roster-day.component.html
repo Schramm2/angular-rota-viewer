@@ -6,8 +6,8 @@
 
   <!-- Controls Row -->
   <div class="controls">
-    <!-- Team Selector -->
-    <mat-form-field appearance="outline">
+    <!-- Team Selector (hidden for member role) -->
+    <mat-form-field *ngIf="!isMemberRole()" appearance="outline">
       <mat-label>Team</mat-label>
       <mat-select [formControl]="selectedTeamId" aria-label="Select team">
         <mat-option *ngFor="let team of teams$ | async" [value]="team.id">
@@ -51,17 +51,80 @@
     </mat-form-field>
   </div>
 
+  <!-- Member Next Shift Card (only for member role) -->
+  <div *ngIf="isMemberRole() && (nextShift$ | async) as nextShift" class="next-shift-section">
+    <mat-card class="next-shift-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>schedule</mat-icon>
+          Your Next Shift
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="next-shift-content">
+          <div class="shift-details">
+            <div class="shift-task">{{ nextShift.task }}</div>
+            <div class="shift-time">
+              {{ formatNextShiftDate(nextShift) }} • {{ nextShift.startTime }} - {{ nextShift.endTime }}
+            </div>
+          </div>
+          <mat-chip-set>
+            <mat-chip>{{ formatNextShiftDate(nextShift) }}</mat-chip>
+          </mat-chip-set>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Admin Summary Panel (only for admin role) -->
+  <div *ngIf="isAdminRole() && (adminSummary$ | async) as summary" class="admin-summary-section">
+    <mat-card class="admin-summary-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>dashboard</mat-icon>
+          System Summary
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <div class="summary-value">{{ summary.totalTeams }}</div>
+            <div class="summary-label">Teams</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-value">{{ summary.totalMembers }}</div>
+            <div class="summary-label">Active Members</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-value">{{ summary.totalShifts }}</div>
+            <div class="summary-label">Today's Shifts</div>
+          </div>
+          <div class="summary-item" *ngIf="summary.unassignedShifts > 0">
+            <div class="summary-value warning">{{ summary.unassignedShifts }}</div>
+            <div class="summary-label">Unassigned</div>
+          </div>
+          <div class="summary-item" *ngIf="summary.overlapShifts > 0">
+            <div class="summary-value error">{{ summary.overlapShifts }}</div>
+            <div class="summary-label">Overlaps</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
   <!-- Shifts Content -->
   <div class="shifts-container">
-    <ng-container *ngIf="shifts$ | async as shifts">
+    <ng-container *ngIf="filteredShifts$ | async as shifts">
       
       <!-- Empty State -->
       <mat-card *ngIf="shifts.length === 0" class="empty-state">
         <mat-card-content>
           <div class="empty-content">
             <mat-icon>event_busy</mat-icon>
-            <h3>No shifts assigned for this day</h3>
-            <p>There are no scheduled shifts for the selected team and date.</p>
+            <h3 *ngIf="!isMemberRole()">No shifts assigned for this day</h3>
+            <h3 *ngIf="isMemberRole()">No shifts for you today</h3>
+            <p *ngIf="!isMemberRole()">There are no scheduled shifts for the selected team and date.</p>
+            <p *ngIf="isMemberRole()">You don't have any shifts scheduled for this date. Check your upcoming shifts above.</p>
           </div>
         </mat-card-content>
       </mat-card>
@@ -78,7 +141,7 @@
                       [class.unassigned]="shift.isUnassigned">
                   {{ shift.isUnassigned ? 'Unassigned' : shift.member?.name }}
                 </span>
-                <span *ngIf="!shift.isUnassigned" class="member-role">
+                <span *ngIf="!shift.isUnassigned && !isMemberRole()" class="member-role">
                   ({{ shift.member?.role }})
                 </span>
               </div>
@@ -89,12 +152,12 @@
               <div class="time-range">
                 {{ shift.startTime }} - {{ shift.endTime }}
               </div>
-              <div class="source-timezone">
+              <div class="source-timezone" *ngIf="!isMemberRole()">
                 Source TZ: {{ shift.sourceTimezone }}
               </div>
               
-              <!-- Warning indicators -->
-              <div class="warnings" *ngIf="shift.isUnassigned || shift.hasOverlap">
+              <!-- Warning indicators (only for teamLead/manager/admin) -->
+              <div class="warnings" *ngIf="canViewFullTeam() && (shift.isUnassigned || shift.hasOverlap)">
                 <div *ngIf="shift.isUnassigned" class="warning unassigned-warning">
                   <mat-icon>person_off</mat-icon>
                   <span>Unassigned</span>

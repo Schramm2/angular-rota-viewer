@@ -1,10 +1,57 @@
-<mat-toolbar color="primary">
+<!-- Skip to content link for accessibility -->
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<mat-toolbar color="primary" role="banner">
   <span>{{ title }}</span>
   <span class="spacer"></span>
-  <button mat-button routerLink="/" routerLinkActive="active">Roster</button>
-  <button mat-button routerLink="/reports" routerLinkActive="active">Reports</button>
+  
+  <!-- Role Switcher -->
+  <div class="role-controls" *ngIf="currentRole$ | async as currentRole">
+    <mat-form-field appearance="outline" class="role-selector">
+      <mat-label>Role</mat-label>
+      <mat-select [value]="currentRole" 
+                  (selectionChange)="onRoleChange($event.value)"
+                  aria-label="Select your role">
+        <mat-option *ngFor="let role of availableRoles" [value]="role">
+          {{ getRoleDisplayName(role) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Member Selector (only for member role) -->
+    <mat-form-field *ngIf="currentRole === 'member'" appearance="outline" class="member-selector">
+      <mat-label>Member</mat-label>
+      <mat-select [value]="(currentMemberId$ | async)" 
+                  (selectionChange)="onMemberChange($event.value)"
+                  aria-label="Select member">
+        <mat-option *ngFor="let member of (members$ | async)" [value]="member.id">
+          {{ member.name }} ({{ member.role }})
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Theme Toggle -->
+  <button mat-icon-button 
+          (click)="toggleTheme()" 
+          [matTooltip]="getThemeTooltip((currentTheme$ | async) || 'light')"
+          aria-label="Toggle theme">
+    <mat-icon>{{ getThemeIcon((currentTheme$ | async) || 'light') }}</mat-icon>
+  </button>
+
+  <!-- Navigation -->
+  <button mat-button routerLink="/" routerLinkActive="active" 
+          matTooltip="View daily roster">
+    <mat-icon>calendar_today</mat-icon>
+    Roster
+  </button>
+  <button mat-button routerLink="/reports" routerLinkActive="active"
+          matTooltip="View reports and analytics">
+    <mat-icon>analytics</mat-icon>
+    Reports
+  </button>
 </mat-toolbar>
 
-<div class="container">
+<main id="main-content" class="container" role="main">
   <router-outlet></router-outlet>
-</div>
+</main>

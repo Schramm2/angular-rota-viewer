@@ -2,14 +2,20 @@
   <!-- Header Controls -->
   <mat-card class="controls-card">
     <mat-card-header>
-      <mat-card-title>Reports Configuration</mat-card-title>
+      <mat-card-title>
+        <span *ngIf="!isMemberRole()">Team Reports</span>
+        <span *ngIf="isMemberRole()">My Reports</span>
+      </mat-card-title>
+      <mat-card-subtitle *ngIf="isMemberRole()">
+        Your personal shift statistics and performance
+      </mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
       <div class="controls-row">
-        <!-- Team Selection -->
-        <mat-form-field appearance="outline">
+        <!-- Team Selection (hidden for member role) -->
+        <mat-form-field *ngIf="!isMemberRole()" appearance="outline">
           <mat-label>Team</mat-label>
-          <mat-select [formControl]="selectedTeamId">
+          <mat-select [formControl]="selectedTeamId" aria-label="Select team">
             <mat-option *ngFor="let team of teams$ | async" [value]="team.id">
               {{ team.name }}
             </mat-option>
@@ -19,14 +25,14 @@
         <!-- Date Range -->
         <mat-form-field appearance="outline">
           <mat-label>Start Date</mat-label>
-          <input matInput [matDatepicker]="startPicker" [formControl]="startDate" (dateChange)="onStartDateChange()">
+          <input matInput [matDatepicker]="startPicker" [formControl]="startDate" (dateChange)="onStartDateChange()" aria-label="Select start date">
           <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
           <mat-datepicker #startPicker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline">
           <mat-label>End Date</mat-label>
-          <input matInput [matDatepicker]="endPicker" [formControl]="endDate" (dateChange)="onEndDateChange()">
+          <input matInput [matDatepicker]="endPicker" [formControl]="endDate" (dateChange)="onEndDateChange()" aria-label="Select end date">
           <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
           <mat-datepicker #endPicker></mat-datepicker>
         </mat-form-field>
@@ -43,13 +49,14 @@
             <mat-icon class="kpi-icon">assignment</mat-icon>
             <div class="kpi-details">
               <div class="kpi-value">{{ data.totalShifts }}</div>
-              <div class="kpi-label">Total Shifts</div>
+              <div class="kpi-label" *ngIf="!isMemberRole()">Total Shifts</div>
+              <div class="kpi-label" *ngIf="isMemberRole()">My Shifts</div>
             </div>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="kpi-card">
+      <mat-card class="kpi-card" *ngIf="!isMemberRole()">
         <mat-card-content>
           <div class="kpi-content">
             <mat-icon class="kpi-icon">people</mat-icon>
@@ -67,13 +74,14 @@
             <mat-icon class="kpi-icon">schedule</mat-icon>
             <div class="kpi-details">
               <div class="kpi-value">{{ data.coveragePercentage }}%</div>
-              <div class="kpi-label">Coverage %</div>
+              <div class="kpi-label" *ngIf="!isMemberRole()">Coverage %</div>
+              <div class="kpi-label" *ngIf="isMemberRole()">My Coverage</div>
             </div>
           </div>
         </mat-card-content>
       </mat-card>
 
-      <mat-card class="kpi-card">
+      <mat-card class="kpi-card" *ngIf="!isMemberRole()">
         <mat-card-content>
           <div class="kpi-content">
             <mat-icon class="kpi-icon">balance</mat-icon>
@@ -91,17 +99,20 @@
   <div class="charts-section" *ngIf="reportData$ | async as data">
     <div class="charts-grid">
       <!-- Bar Chart: Shifts per Member -->
-      <mat-card class="chart-card">
+      <mat-card class="chart-card" *ngIf="!isMemberRole() || data.shiftsPerMember.length > 0">
         <mat-card-header>
-          <mat-card-title>Shifts per Member</mat-card-title>
-          <mat-card-subtitle>Distribution of shifts across team members</mat-card-subtitle>
+          <mat-card-title *ngIf="!isMemberRole()">Shifts per Member</mat-card-title>
+          <mat-card-title *ngIf="isMemberRole()">My Shift Distribution</mat-card-title>
+          <mat-card-subtitle *ngIf="!isMemberRole()">Distribution of shifts across team members</mat-card-subtitle>
+          <mat-card-subtitle *ngIf="isMemberRole()">Your shift activity over the selected period</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <div class="chart-container">
             <canvas baseChart
                     [data]="barChartData"
                     [options]="barChartOptions"
-                    [type]="barChartType">
+                    [type]="barChartType"
+                    [attr.aria-label]="isMemberRole() ? 'Your shift distribution chart' : 'Team shift distribution chart'">
             </canvas>
           </div>
         </mat-card-content>
@@ -110,15 +121,18 @@
       <!-- Line Chart: Daily Coverage -->
       <mat-card class="chart-card">
         <mat-card-header>
-          <mat-card-title>Daily Coverage %</mat-card-title>
-          <mat-card-subtitle>Coverage percentage across the selected date range</mat-card-subtitle>
+          <mat-card-title *ngIf="!isMemberRole()">Daily Coverage %</mat-card-title>
+          <mat-card-title *ngIf="isMemberRole()">My Daily Activity</mat-card-title>
+          <mat-card-subtitle *ngIf="!isMemberRole()">Coverage percentage across the selected date range</mat-card-subtitle>
+          <mat-card-subtitle *ngIf="isMemberRole()">Your shift activity across the selected date range</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <div class="chart-container">
             <canvas baseChart
                     [data]="lineChartData"
                     [options]="lineChartOptions"
-                    [type]="lineChartType">
+                    [type]="lineChartType"
+                    [attr.aria-label]="isMemberRole() ? 'Your daily activity chart' : 'Daily coverage chart'">
             </canvas>
           </div>
         </mat-card-content>
@@ -132,8 +146,10 @@
       <mat-card-content>
         <div class="no-data-content">
           <mat-icon class="no-data-icon">info</mat-icon>
-          <h3>No Data Available</h3>
-          <p>No shifts found for the selected team and date range. Try selecting a different team or adjusting the date range.</p>
+          <h3 *ngIf="!isMemberRole()">No Data Available</h3>
+          <h3 *ngIf="isMemberRole()">No Shifts Found</h3>
+          <p *ngIf="!isMemberRole()">No shifts found for the selected team and date range. Try selecting a different team or adjusting the date range.</p>
+          <p *ngIf="isMemberRole()">You don't have any shifts scheduled in the selected date range. Try adjusting the date range or check with your team lead.</p>
         </div>
       </mat-card-content>
     </mat-card>
