@@ -355,6 +355,127 @@ body {
   box-shadow: var(--shadow-lg) !important;
 }
 
+/* Date picker calendar dropdown styling */
+.mat-datepicker-popup {
+  background-color: var(--surface-primary) !important;
+  border: 1px solid var(--border-secondary) !important;
+  border-radius: var(--border-radius-xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  overflow: hidden;
+}
+
+.mat-datepicker-content {
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar {
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar-header {
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar-body {
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar-body-cell {
+  color: var(--text-primary) !important;
+  
+  &:hover {
+    background-color: var(--interactive-secondary-hover) !important;
+  }
+  
+  &.mat-calendar-body-selected {
+    background-color: var(--interactive-primary) !important;
+    color: var(--text-inverse) !important;
+  }
+  
+  &.mat-calendar-body-today {
+    border: 1px solid var(--interactive-primary) !important;
+  }
+}
+
+.mat-calendar-table {
+  background-color: var(--surface-primary) !important;
+}
+
+.mat-calendar-table-header {
+  background-color: var(--surface-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.mat-calendar-table-header th {
+  color: var(--text-secondary) !important;
+  font-weight: var(--font-weight-medium) !important;
+}
+
+.mat-calendar-arrow {
+  color: var(--text-secondary) !important;
+}
+
+.mat-calendar-previous-button,
+.mat-calendar-next-button {
+  color: var(--text-secondary) !important;
+  
+  &:hover {
+    background-color: var(--interactive-secondary-hover) !important;
+    color: var(--interactive-primary) !important;
+  }
+}
+
+.mat-calendar-period-button {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-weight-medium) !important;
+  
+  &:hover {
+    background-color: var(--interactive-secondary-hover) !important;
+  }
+}
+
+/* Additional date picker overlay and backdrop styling */
+.cdk-overlay-pane {
+  .mat-datepicker-popup {
+    background-color: var(--surface-primary) !important;
+  }
+}
+
+.cdk-overlay-backdrop {
+  background-color: rgba(0, 0, 0, 0.32) !important;
+}
+
+/* Month and year view styling */
+.mat-calendar-month-view,
+.mat-calendar-year-view {
+  background-color: var(--surface-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.mat-calendar-month-label,
+.mat-calendar-year-label {
+  color: var(--text-primary) !important;
+  font-weight: var(--font-weight-medium) !important;
+}
+
+/* Ensure all calendar content has solid background */
+.mat-datepicker-content-container {
+  background-color: var(--surface-primary) !important;
+}
+
+/* Additional calendar navigation styling */
+.mat-calendar-controls {
+  background-color: var(--surface-primary) !important;
+}
+
+.mat-calendar-spacer {
+  background-color: var(--surface-primary) !important;
+}
+
 /* Print styles */
 @media print {
   .mat-toolbar,

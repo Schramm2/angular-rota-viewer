@@ -1,58 +1,65 @@
 {
-    "teams": [
-      {
-        "id": "t1",
-        "name": "Ops Support A",
-        "timezone": "Africa/Johannesburg",
-        "members": [{ "id": "m1" }, { "id": "m2" }, { "id": "m3" }, { "id": "m4" }]
-      },
-      {
-        "id": "t2",
-        "name": "Facilities Crew B",
-        "timezone": "Africa/Johannesburg",
-        "members": [{ "id": "m5" }, { "id": "m6" }, { "id": "m7" }, { "id": "m8" }]
-      }
-    ],
-    "members": [
-      { "id": "m1", "name": "Alex M", "role": "teamLead", "skills": ["L1 Support"], "isActive": true },
-      { "id": "m2", "name": "Sam K", "role": "member", "skills": ["L1","L2"], "isActive": true },
-      { "id": "m3", "name": "Lee R", "role": "member", "skills": ["L2"], "isActive": true },
-      { "id": "m4", "name": "Nina P", "role": "member", "skills": ["L1"], "isActive": true },
-  
-      { "id": "m5", "name": "Chris T", "role": "teamLead", "skills": ["Electrical"], "isActive": true },
-      { "id": "m6", "name": "Riley J", "role": "member", "skills": ["Plumbing"], "isActive": true },
-      { "id": "m7", "name": "Jordan F", "role": "member", "skills": ["HVAC"], "isActive": true },
-      { "id": "m8", "name": "Taylor S", "role": "member", "skills": ["General"], "isActive": true }
-    ],
-    "rosters": [
-      {
-        "id": "r1",
-        "teamId": "t1",
-        "days": ["2025-09-01","2025-09-02","2025-09-03","2025-09-04","2025-09-05","2025-09-06","2025-09-07"],
-        "shifts": [
-          { "id": "s1",  "date": "2025-09-01", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m1", "teamId": "t1" },
-          { "id": "s2",  "date": "2025-09-02", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m2", "teamId": "t1" },
-          { "id": "s3",  "date": "2025-09-03", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m3", "teamId": "t1" },
-          { "id": "s4",  "date": "2025-09-04", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m4", "teamId": "t1" },
-          { "id": "s5",  "date": "2025-09-05", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m1", "teamId": "t1" },
-          { "id": "s6",  "date": "2025-09-06", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m2", "teamId": "t1" },
-          { "id": "s7",  "date": "2025-09-07", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m3", "teamId": "t1" }
-        ]
-      },
-      {
-        "id": "r2",
-        "teamId": "t2",
-        "days": ["2025-09-01","2025-09-02","2025-09-03","2025-09-04","2025-09-05","2025-09-06","2025-09-07"],
-        "shifts": [
-          { "id": "s8",  "date": "2025-09-01", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m5", "teamId": "t2" },
-          { "id": "s9",  "date": "2025-09-02", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m6", "teamId": "t2" },
-          { "id": "s10", "date": "2025-09-03", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m7", "teamId": "t2" },
-          { "id": "s11", "date": "2025-09-04", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m8", "teamId": "t2" },
-          { "id": "s12", "date": "2025-09-05", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m5", "teamId": "t2" },
-          { "id": "s13", "date": "2025-09-06", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m6", "teamId": "t2" },
-          { "id": "s14", "date": "2025-09-07", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m7", "teamId": "t2" }
-        ]
-      }
-    ]
-  }
-  
+  "teams": [
+    {
+      "id": "t1",
+      "name": "Ops Support A",
+      "timezone": "Africa/Johannesburg",
+      "members": [{ "id": "m1" }, { "id": "m2" }, { "id": "m3" }, { "id": "m4" }]
+    },
+    {
+      "id": "t2",
+      "name": "Facilities Crew B",
+      "timezone": "Africa/Johannesburg",
+      "members": [{ "id": "m5" }, { "id": "m6" }, { "id": "m7" }, { "id": "m8" }]
+    }
+  ],
+  "members": [
+    { "id": "m1", "name": "Alex M", "role": "teamLead", "skills": ["L1 Support"], "isActive": true },
+    { "id": "m2", "name": "Sam K", "role": "member", "skills": ["L1","L2"], "isActive": true },
+    { "id": "m3", "name": "Lee R", "role": "member", "skills": ["L2"], "isActive": true },
+    { "id": "m4", "name": "Nina P", "role": "member", "skills": ["L1"], "isActive": true },
+
+    { "id": "m5", "name": "Chris T", "role": "teamLead", "skills": ["Electrical"], "isActive": true },
+    { "id": "m6", "name": "Riley J", "role": "member", "skills": ["Plumbing"], "isActive": true },
+    { "id": "m7", "name": "Jordan F", "role": "member", "skills": ["HVAC"], "isActive": true },
+    { "id": "m8", "name": "Taylor S", "role": "member", "skills": ["General"], "isActive": true }
+  ],
+  "rosters": [
+    {
+      "id": "r1",
+      "teamId": "t1",
+      "days": ["2025-09-06","2025-09-07","2025-09-08","2025-09-09","2025-09-10","2025-09-11","2025-09-12"],
+      "shifts": [
+        { "id": "s1",  "date": "2025-09-06", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m1", "teamId": "t1" },
+        { "id": "s2",  "date": "2025-09-07", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m2", "teamId": "t1" },
+        { "id": "s3",  "date": "2025-09-08", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m3", "teamId": "t1" },
+        { "id": "s4",  "date": "2025-09-09", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m4", "teamId": "t1" },
+        { "id": "s5",  "date": "2025-09-10", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m1", "teamId": "t1" },
+        { "id": "s6",  "date": "2025-09-11", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m2", "teamId": "t1" },
+        { "id": "s7",  "date": "2025-09-12", "start": "08:00", "end": "16:00", "task": "Support Desk", "memberId": "m3", "teamId": "t1" },
+
+        { "id": "s8",  "date": "2025-09-09", "start": "14:00", "end": "22:00", "task": "Network Monitoring", "memberId": "m2", "teamId": "t1" },
+        { "id": "s9",  "date": "2025-09-10", "start": "14:00", "end": "22:00", "task": "Network Monitoring", "memberId": "m3", "teamId": "t1" },
+
+        { "id": "s10", "date": "2025-09-08", "start": "10:00", "end": "14:00", "task": "Support Desk", "memberId": "UNASSIGNED", "teamId": "t1" }
+      ]
+    },
+    {
+      "id": "r2",
+      "teamId": "t2",
+      "days": ["2025-09-06","2025-09-07","2025-09-08","2025-09-09","2025-09-10","2025-09-11","2025-09-12"],
+      "shifts": [
+        { "id": "s11", "date": "2025-09-06", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m5", "teamId": "t2" },
+        { "id": "s12", "date": "2025-09-07", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m6", "teamId": "t2" },
+        { "id": "s13", "date": "2025-09-08", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m7", "teamId": "t2" },
+        { "id": "s14", "date": "2025-09-09", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m8", "teamId": "t2" },
+        { "id": "s15", "date": "2025-09-10", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m5", "teamId": "t2" },
+        { "id": "s16", "date": "2025-09-11", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m6", "teamId": "t2" },
+        { "id": "s17", "date": "2025-09-12", "start": "09:00", "end": "17:00", "task": "Maintenance Round", "memberId": "m7", "teamId": "t2" },
+
+        { "id": "s18", "date": "2025-09-06", "start": "22:00", "end": "06:00", "task": "On-Call", "memberId": "m5", "teamId": "t2" },
+        { "id": "s19", "date": "2025-09-11", "start": "14:00", "end": "22:00", "task": "Cleaning", "memberId": "m8", "teamId": "t2" }
+      ]
+    }
+  ]
+}
