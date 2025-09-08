@@ -1,59 +1,126 @@
-# RotaApp
+# Rota Viewer
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.1.
+A lightweight Angular app to visualise **daily team rosters** from JSON with **timezone-aware** times, **role-based** views, and **management reports** — all client-side.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Quickstart
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Clone the repo and install dependencies:
 
 ```bash
-ng generate component component-name
-```
+npm ci
+ng serve -o
+````
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+Build for production:
 
 ```bash
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+Run tests:
 
 ```bash
 ng test
+# (with coverage)
+ng test --code-coverage
 ```
 
-## Running end-to-end tests
+---
 
-For end-to-end (e2e) testing, run:
+## ✨ Features
 
-```bash
-ng e2e
+* 📅 **Daily roster** (read-only) from `assets/data.json`
+* 🔄 **Team/date switching** and **timezone conversion** (via Luxon)
+* 📊 **Reports**: allocation, coverage %, fairness (σ) with clean charts
+* 👥 **Roles**: member, team lead, manager, admin
+* ♿ **Accessible**, **responsive** UI (Angular Material)
+* ✅ **Test suite** for services, metrics, and smoke tests for components
+
+---
+
+## 📂 Project Structure
+
+```
+src/app/
+  core/services/     # Data, timezone, role services
+  features/roster/   # Daily roster view
+  features/reports/  # Reports page (KPIs + charts)
+  models.ts          # Entities and interfaces
+src/assets/data.json # Sample dataset
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## 🛠️ Design
 
-## Additional Resources
+### Entity Relationship Diagram
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```mermaid
+erDiagram
+  TEAM ||--o{ MEMBER : has
+  TEAM ||--o{ ROSTER : owns
+  ROSTER ||--o{ SHIFT : contains
+  MEMBER ||--o{ SHIFT : assigned_to
+
+  TEAM {string id PK
+        string name
+        string timezone}
+  MEMBER {string id PK
+          string name
+          string role
+          string timezone
+          bool isActive}
+  ROSTER {string id PK
+          string teamId FK
+          string[] days}
+  SHIFT {string id PK
+         string date
+         string start
+         string end
+         string task
+         string memberId FK
+         string teamId FK}
+```
+
+### Role Flow
+
+```mermaid
+flowchart TD
+A[Open App] --> B[Select Team & Date]
+B --> C{Role}
+C -->|Member| D[Show my shifts + next shift]
+C -->|Team Lead/Manager| E[Full team day roster + warnings]
+C -->|Admin| F[Full roster + summary]
+E --> G[Reports]
+F --> G
+```
+
+---
+
+## 📊 Tech Stack
+
+* **Angular** (standalone components)
+* **Angular Material** for UI
+* **Chart.js + ng2-charts** for reports
+* **Luxon** for timezone conversion
+* **RxJS** for state & observables
+
+---
+
+## ♿ Accessibility & Responsiveness
+
+* Keyboard-friendly navigation
+* ARIA labels for interactive elements
+* Adequate contrast and visible focus states
+* Responsive layout (mobile → desktop)
+
+---
+
+## ⚠️ Limitations & Future Work
+
+* Editing rosters (currently read-only)
+* Multi-week grid view
+* CSV/PDF export
+* Authentication & user persistence
+* Internationalisation (i18n)
+
